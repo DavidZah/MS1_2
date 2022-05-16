@@ -20,12 +20,13 @@ def get_signal_info(signal):
 def freq_parameters(signal):
     spectrum = np.fft.fft(signal)
     power_spectrum = abs(spectrum)
-    frequencies = np.fft.fftfreq(len(spectrum), 1 / fs)
+    frequencies = np.fft.fftfreq(len(spectrum), Ts)
     i = frequencies > 0
     dom_freq = frequencies[np.argmax(abs(spectrum))]
-    plt.plot(frequencies[i],2*power_spectrum[i])
+    plt.plot(frequencies[i],2*power_spectrum[i]/len(signal))
     plt.xlabel("freq f [Hz]")
     plt.ylabel("|X(f)|")
+    plt.show()
     print(f'Dominantni frkvence: {dom_freq}Hz')
 
 def widows_fcn(signal):
@@ -70,8 +71,8 @@ if __name__ == '__main__':
 
     signal = load_file()
     signal = signal[:, 0]
-    get_signal_info(signal)
+    #get_signal_info(signal)
     freq_parameters(signal)
-    widows_fcn(signal)
-    find_abnormal(signal)
+    #widows_fcn(signal)
+    #find_abnormal(signal)
     print("done")
