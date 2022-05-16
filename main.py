@@ -20,29 +20,29 @@ def get_signal_info(signal):
 def freq_parameters(signal):
     spectrum = np.fft.fft(signal)
     power_spectrum = abs(spectrum)
-    frequencies = np.fft.fftfreq(len(spectrum), 1 / freq)
+    frequencies = np.fft.fftfreq(len(spectrum), 1 / fs)
     i = frequencies > 0
     dom_freq = frequencies[np.argmax(abs(spectrum))]
     plt.plot(frequencies[i],2*power_spectrum[i])
     plt.xlabel("freq f [Hz]")
     plt.ylabel("|X(f)|")
-    print(f'dominantni frkvence: {dom_freq}Hz')
+    print(f'Dominantni frkvence: {dom_freq}Hz')
 
-def widows_fcn(singal):
+def widows_fcn(signal):
     # okenkova funkce
     plt.figure(figsize=(15, 5))
     # mensi okenko
     plt.subplot(1, 2, 1)
-    plt.title("Spektrogram s okénkem $2^8$")
+    plt.title("Spektrogram s okénkem 256")
     plt.xlabel("čas [s]")
     plt.ylabel("frekvence [Hz]")
-    spectrogram1 = plt.specgram(signal, Fs=fs, NFFT=2 ** 8, mode="default", window=plt.mlab.window_hanning)
+    plt.specgram(signal, Fs=fs, NFFT=256, mode="default", window=plt.mlab.window_hanning)
     # vetsi okenko
     plt.subplot(1, 2, 2)
-    plt.title("Spektrogram s okénkem $2^{12}$")
+    plt.title("Spektrogram s okénkem 4096")
     plt.xlabel("čas [s]")
     plt.ylabel("frekvence [Hz]")
-    spectrogram2 = plt.specgram(signal, Fs=fs, NFFT=2 ** 12, mode="default", window=plt.mlab.window_hanning)
+    plt.specgram(signal, Fs=fs, NFFT=4096, mode="default", window=plt.mlab.window_hanning)
     plt.show()
 
 def load_file():
@@ -50,25 +50,28 @@ def load_file():
     signal = x["signal"]
     t = np.linspace(0, len(signal) - 1, len(signal)) * Ts
     plt.plot(t, signal)
+    plt.xlabel("Time [s]")
+    plt.ylabel("Amplitude")
     plt.show()
     return signal
 
 def find_abnormal(signal):
-    # nalezeni caso-frekvencnich udalosti
-    spectrogram = spectrogram1
-    # suma jednotlivych sloupcu
+    time = np.array(range(0, len(signal))) * Ts
+    spectrogram = plt.specgram(signal, Fs=fs, NFFT=2 ** 8, mode="default", window=plt.mlab.window_hanning)
+    plt.clf()
     column_sum = np.sum(spectrogram[0], axis=0)
-    # vykresleni sum v jednotlivych casovych okamzicich
-    plt.figure()
-    plt.scatter(np.arange(0, (len(time) / 2 ** 12), (len(time) / 2 ** 12) / len(column_sum)) * (T * 2 ** 12),
+    plt.scatter(np.arange(0, (len(time) / 4096), (len(time) / 4096) / len(column_sum)) * (Ts * 4096),
                 column_sum)
-    # vypsani maxim
-    print(
-        f"casy ve kterych byla nalezena maxima: {np.argpartition(column_sum, -4)[-20:] * ((len(time) / 2 ** 12) / len(column_sum)) * (T * 2 ** 12)}")
+    plt.show()
+    max = np.argpartition(column_sum, -4)[-20:] * ((len(time) / 4096) / len(column_sum)) * (Ts *4096)
+    print(f"Časy abnormalit: {max}")
 
 if __name__ == '__main__':
 
     signal = load_file()
     signal = signal[:, 0]
     get_signal_info(signal)
+    freq_parameters(signal)
     widows_fcn(signal)
+    find_abnormal(signal)
+    print("done")
